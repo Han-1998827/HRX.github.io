@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二次函数图像探索</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        
+        .slider-container input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            outline: none;
+        }
+        
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+            transition: transform 0.15s;
+        }
+        
+        .slider-container input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+        
+        .param-input {
+            -moz-appearance: textfield;
+        }
+        
+        .param-input::-webkit-outer-spin-button,
+        .param-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .toggle-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .toggle-btn.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        .toggle-btn:not(.active) {
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+        
+        canvas {
+            background: #fafbfc;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4">
+    <div class="max-w-[1600px] mx-auto">
+        <!-- 标题 -->
+        <div class="text-center mb-4">
+            <h1 class="text-4xl font-bold text-slate-800 mb-2">二次函数图像探索</h1>
+            <div id="expression" class="text-3xl font-medium text-orange-500 bg-white px-8 py-3 rounded-xl inline-block shadow-sm">
+                y = x²
+            </div>
+        </div>
+        
+        <div class="flex gap-4">
+            <!-- 左侧：图像显示区 -->
+            <div class="flex-1 bg-white rounded-2xl shadow-lg p-4">
+                <div class="relative">
+                    <canvas id="graphCanvas" width="900" height="700" class="w-full rounded-xl border border-slate-200"></canvas>
+                    
+                    <!-- 缩放控制 -->
+                    <div class="absolute top-3 right-3 flex flex-col gap-2">
+                        <button id="zoomIn" class="w-10 h-10 bg-white rounded-lg shadow-md flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 transition">+</button>
+                        <button id="zoomOut" class="w-10 h-10 bg-white rounded-lg shadow-md flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 transition">−</button>
+                        <button id="zoomReset" class="w-10 h-10 bg-white rounded-lg shadow-md flex items-center justify-center text-sm font-medium text-slate-600 hover:bg-slate-50 transition">重置</button>
+                    </div>
+                </div>
+                
+                <!-- 底部信息栏 -->
+                <div class="mt-4 grid grid-cols-3 gap-4 text-center">
+                    <div class="bg-slate-50 rounded-xl p-3">
+                        <div class="text-sm text-slate-500 mb-1">判别式 Δ</div>
+                        <div id="discriminant" class="text-xl font-bold text-slate-700">Δ = 0</div>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-3">
+                        <div class="text-sm text-slate-500 mb-1">顶点坐标</div>
+                        <div id="vertexInfo" class="text-xl font-bold text-purple-600">(0, 0)</div>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-3">
+                        <div class="text-sm text-slate-500 mb-1">与x轴交点</div>
+                        <div id="xInterceptInfo" class="text-xl font-bold text-red-500">一个交点 (0, 0)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧：控制面板 -->
+            <div class="w-80 bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-5">
+                <h2 class="text-xl font-bold text-slate-800 border-b pb-3">参数调节</h2>
+                
+                <!-- 参数 a -->
+                <div class="slider-container">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-lg font-medium text-slate-700">参数 <span class="text-orange-500 font-bold">a</span></label>
+                        <input type="number" id="aInput" class="param-input w-20 text-center text-lg font-bold border-2 border-slate-200 rounded-lg py-1 focus:border-blue-400 focus:outline-none" value="1" step="0.1">
+                    </div>
+                    <input type="range" id="aSlider" min="-10" max="10" step="0.1" value="1" class="w-full">
+                    <div class="flex justify-between text-xs text-slate-400 mt-1">
+                        <span>-10</span>
+                        <span>0</span>
+                        <span>10</span>
+                    </div>
+                </div>
+                
+                <!-- 参数 b -->
+                <div class="slider-container">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-lg font-medium text-slate-700">参数 <span class="text-green-500 font-bold">b</span></label>
+                        <input type="number" id="bInput" class="param-input w-20 text-center text-lg font-bold border-2 border-slate-200 rounded-lg py-1 focus:border-blue-400 focus:outline-none" value="0" step="0.1">
+                    </div>
+                    <input type="range" id="bSlider" min="-20" max="20" step="0.1" value="0" class="w-full">
+                    <div class="flex justify-between text-xs text-slate-400 mt-1">
+                        <span>-20</span>
+                        <span>0</span>
+                        <span>20</span>
+                    </div>
+                </div>
+                
+                <!-- 参数 c -->
+                <div class="slider-container">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-lg font-medium text-slate-700">参数 <span class="text-blue-500 font-bold">c</span></label>
+                        <input type="number" id="cInput" class="param-input w-20 text-center text-lg font-bold border-2 border-slate-200 rounded-lg py-1 focus:border-blue-400 focus:outline-none" value="0" step="0.1">
+                    </div>
+                    <input type="range" id="cSlider" min="-20" max="20" step="0.1" value="0" class="w-full">
+                    <div class="flex justify-between text-xs text-slate-400 mt-1">
+                        <span>-20</span>
+                        <span>0</span>
+                        <span>20</span>
+                    </div>
+                </div>
+                
+                <!-- 辅助线开关 -->
+                <div class="border-t pt-4">
+                    <h3 class="text-lg font-bold text-slate-800 mb-3">显示选项</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="toggleVertex" class="toggle-btn active px-3 py-2 rounded-lg text-sm font-medium">顶点</button>
+                        <button id="toggleAxis" class="toggle-btn active px-3 py-2 rounded-lg text-sm font-medium">对称轴</button>
+                        <button id="toggleXIntercept" class="toggle-btn active px-3 py-2 rounded-lg text-sm font-medium">x轴交点</button>
+                        <button id="toggleYIntercept" class="toggle-btn active px-3 py-2 rounded-lg text-sm font-medium">y轴交点</button>
+                        <button id="toggleGrid" class="toggle-btn active px-3 py-2 rounded-lg text-sm font-medium">网格线</button>
+                        <button id="toggleRef" class="toggle-btn active px-3 py-2 rounded-lg text-sm font-medium">参考图像</button>
+                    </div>
+                </div>
+                
+                <!-- 操作按钮 -->
+                <div class="border-t pt-4 mt-auto">
+                    <div class="flex gap-2">
+                        <button id="saveRef" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 rounded-xl transition">保存参考图像</button>
+                        <button id="resetBtn" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-3 rounded-xl transition">重置参数</button>
+                    </div>
+                    
+                    <!-- 图例 -->
+                    <div class="mt-4 bg-slate-50 rounded-xl p-3">
+                        <div class="text-sm font-medium text-slate-600 mb-2">图例说明</div>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-1 bg-orange-500 rounded"></div>
+                                <span class="text-slate-600">当前抛物线</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-0.5 border-t-2 border-dashed border-slate-400"></div>
+                                <span class="text-slate-600">参考抛物线</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+                                <span class="text-slate-600">顶点</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <span class="text-slate-600">x轴交点</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                <span class="text-slate-600">y轴交点</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 border-t-2 border-dashed border-green-400"></div>
+                                <span class="text-slate-600">对称轴</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 参数状态
+        let params = { a: 1, b: 0, c: 0 };
+        let refParams = { a: 1, b: 0, c: 0 };
+        
+        // 显示选项
+        let showOptions = {
+            vertex: true,
+            axis: true,
+            xIntercept: true,
+            yIntercept: true,
+            grid: true,
+            ref: true
+        };
+        
+        // 坐标系配置
+        let coordConfig = {
+            xMin: -20,
+            xMax: 20,
+            yMin: -20,
+            yMax: 20,
+            unit: 30 // 像素/单位
+        };
+        
+        // 计算画布中心偏移
+        function getOrigin() {
+            return {
+                x: canvas.width / 2,
+                y: canvas.height / 2
+            };
+        }
+        
+        // 坐标转换：数学坐标 -> 画布坐标
+        function toCanvasX(x) {
+            return getOrigin().x + x * coordConfig.unit;
+        }
+        
+        function toCanvasY(y) {
+            return getOrigin().y - y * coordConfig.unit;
+        }
+        
+        // 画布坐标 -> 数学坐标
+        function toMathX(canvasX) {
+            return (canvasX - getOrigin().x) / coordConfig.unit;
+        }
+        
+        function toMathY(canvasY) {
+            return (getOrigin().y - canvasY) / coordConfig.unit;
+        }
+        
+        // 计算二次函数值
+        function calcY(x, a, b, c) {
+            return a * x * x + b * x + c;
+        }
+        
+        // 计算顶点
+        function getVertex(a, b, c) {
+            if (a === 0) return null;
+            const vx = -b / (2 * a);
+            const vy = c - (b * b) / (4 * a);
+            return { x: vx, y: vy };
+        }
+        
+        // 计算判别式
+        function getDiscriminant(a, b, c) {
+            return b * b - 4 * a * c;
+        }
+        
+        // 计算x轴交点
+        function getXIntercepts(a, b, c) {
+            if (a === 0) return [];
+            const delta = getDiscriminant(a, b, c);
+            if (delta < 0) return [];
+            if (delta === 0) {
+                const x = -b / (2 * a);
+                return [{ x, y: 0 }];
+            }
+            const sqrtDelta = Math.sqrt(delta);
+            const x1 = (-b - sqrtDelta) / (2 * a);
+            const x2 = (-b + sqrtDelta) / (2 * a);
+            return [{ x: x1, y: 0 }, { x: x2, y: 0 }];
+        }
+        
+        // 计算y轴交点
+        function getYIntercept(c) {
+            return { x: 0, y: c };
+        }
+        
+        // 绘制网格
+        function drawGrid() {
+            if (!showOptions.grid) return;
+            
+            const origin = getOrigin();
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            
+            // 竖线
+            for (let x = Math.ceil(coordConfig.xMin); x <= Math.floor(coordConfig.xMax); x++) {
+                const canvasX = toCanvasX(x);
+                if (canvasX < 0 || canvasX > canvas.width) continue;
+                ctx.beginPath();
+                ctx.moveTo(canvasX, 0);
+                ctx.lineTo(canvasX, canvas.height);
+                ctx.stroke();
+            }
+            
+            // 横线
+            for (let y = Math.ceil(coordConfig.yMin); y <= Math.floor(coordConfig.yMax); y++) {
+                const canvasY = toCanvasY(y);
+                if (canvasY < 0 || canvasY > canvas.height) continue;
+                ctx.beginPath();
+                ctx.moveTo(0, canvasY);
+                ctx.lineTo(canvas.width, canvasY);
+                ctx.stroke();
+            }
+        }
+        
+        // 绘制坐标轴
+        function drawAxes() {
+            const origin = getOrigin();
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 2;
+            
+            // x轴
+            ctx.beginPath();
+            ctx.moveTo(0, origin.y);
+            ctx.lineTo(canvas.width, origin.y);
+            ctx.stroke();
+            
+            // x轴箭头
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - 10, origin.y - 6);
+            ctx.lineTo(canvas.width, origin.y);
+            ctx.lineTo(canvas.width - 10, origin.y + 6);
+            ctx.closePath();
+            ctx.fillStyle = '#475569';
+            ctx.fill();
+            
+            // y轴
+            ctx.beginPath();
+            ctx.moveTo(origin.x, canvas.height);
+            ctx.lineTo(origin.x, 0);
+            ctx.stroke();
+            
+            // y轴箭头
+            ctx.beginPath();
+            ctx.moveTo(origin.x - 6, 10);
+            ctx.lineTo(origin.x, 0);
+            ctx.lineTo(origin.x + 6, 10);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 刻度和标签
+            ctx.fillStyle = '#64748b';
+            ctx.font = '12px "Noto Sans SC"';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            
+            // x轴刻度
+            for (let x = Math.ceil(coordConfig.xMin); x <= Math.floor(coordConfig.xMax); x++) {
+                if (x === 0) continue;
+                if (x % 2 !== 0) continue; // 每2个单位标一个
+                const canvasX = toCanvasX(x);
+                if (canvasX < 20 || canvasX > canvas.width - 20) continue;
+                
+                ctx.beginPath();
+                ctx.moveTo(canvasX, origin.y - 4);
+                ctx.lineTo(canvasX, origin.y + 4);
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillText(x.toString(), canvasX, origin.y + 8);
+            }
+            
+            // y轴刻度
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let y = Math.ceil(coordConfig.yMin); y <= Math.floor(coordConfig.yMax); y++) {
+                if (y === 0) continue;
+                if (y % 2 !== 0) continue;
+                const canvasY = toCanvasY(y);
+                if (canvasY < 20 || canvasY > canvas.height - 20) continue;
+                
+                ctx.beginPath();
+                ctx.moveTo(origin.x - 4, canvasY);
+                ctx.lineTo(origin.x + 4, canvasY);
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillText(y.toString(), origin.x - 10, canvasY);
+            }
+            
+            // 原点标签
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'top';
+            ctx.fillText('O', origin.x - 8, origin.y + 8);
+            
+            // 轴名称
+            ctx.fillStyle = '#475569';
+            ctx.font = 'bold 14px "Noto Sans SC"';
+            ctx.textAlign = 'left';
+            ctx.fillText('x', canvas.width - 20, origin.y - 20);
+            ctx.textAlign = 'left';
+            ctx.fillText('y', origin.x + 10, 15);
+        }
+        
+        // 绘制抛物线
+        function drawParabola(a, b, c, color, lineWidth, dashed = false) {
+            if (a === 0) return;
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+            
+            if (dashed) {
+                ctx.setLineDash([8, 6]);
+            } else {
+                ctx.setLineDash([]);
+            }
+            
+            ctx.beginPath();
+            let started = false;
+            
+            for (let px = 0; px <= canvas.width; px += 1) {
+                const mathX = toMathX(px);
+                const mathY = calcY(mathX, a, b, c);
+                const canvasY = toCanvasY(mathY);
+                
+                // 只绘制在画布范围内的部分
+                if (canvasY >= -100 && canvasY <= canvas.height + 100) {
+                    if (!started) {
+                        ctx.moveTo(px, canvasY);
+                        started = true;
+                    } else {
+                        ctx.lineTo(px, canvasY);
+                    }
+                }
+            }
+            
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        // 绘制点
+        function drawPoint(x, y, color, radius = 6, label = '') {
+            const canvasX = toCanvasX(x);
+            const canvasY = toCanvasY(y);
+            
+            // 外圈白色
+            ctx.beginPath();
+            ctx.arc(canvasX, canvasY, radius + 2, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            
+            // 内圈彩色
+            ctx.beginPath();
+            ctx.arc(canvasX, canvasY, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            // 标签
+            if (label) {
+                ctx.fillStyle = '#334155';
+                ctx.font = 'bold 13px "Noto Sans SC"';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(label, canvasX + 10, canvasY - 5);
+            }
+        }
+        
+        // 绘制对称轴
+        function drawSymmetryAxis(a, b) {
+            if (a === 0 || !showOptions.axis) return;
+            
+            const vx = -b / (2 * a);
+            const canvasX = toCanvasX(vx);
+            
+            ctx.strokeStyle = '#4ade80';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+            
+            ctx.beginPath();
+            ctx.moveTo(canvasX, 0);
+            ctx.lineTo(canvasX, canvas.height);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+        }
+        
+        // 主绘制函数
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制网格
+            drawGrid();
+            
+            // 绘制坐标轴
+            drawAxes();
+            
+            // 绘制参考抛物线
+            if (showOptions.ref) {
+                drawParabola(refParams.a, refParams.b, refParams.c, '#94a3b8', 2.5, true);
+            }
+            
+            // 绘制对称轴
+            drawSymmetryAxis(params.a, params.b);
+            
+            // 绘制当前抛物线
+            drawParabola(params.a, params.b, params.c, '#f97316', 4, false);
+            
+            // 绘制顶点
+            if (showOptions.vertex && params.a !== 0) {
+                const vertex = getVertex(params.a, params.b, params.c);
+                if (vertex) {
+                    drawPoint(vertex.x, vertex.y, '#a855f7', 7, `(${vertex.x.toFixed(2)}, ${vertex.y.toFixed(2)})`);
+                }
+            }
+            
+            // 绘制x轴交点
+            if (showOptions.xIntercept && params.a !== 0) {
+                const intercepts = getXIntercepts(params.a, params.b, params.c);
+                intercepts.forEach((p, i) => {
+                    drawPoint(p.x, p.y, '#ef4444', 6, `x${i+1}=${p.x.toFixed(2)}`);
+                });
+            }
+            
+            // 绘制y轴交点
+            if (showOptions.yIntercept) {
+                const yInt = getYIntercept(params.c);
+                drawPoint(yInt.x, yInt.y, '#3b82f6', 6, `(0, ${yInt.y.toFixed(2)})`);
+            }
+            
+            // 更新信息显示
+            updateInfo();
+        }
+        
+        // 更新信息显示
+        function updateInfo() {
+            // 表达式
+            let expr = 'y = ';
+            if (params.a !== 0) {
+                if (params.a === 1) expr += 'x²';
+                else if (params.a === -1) expr += '-x²';
+                else expr += `${params.a}x²`;
+            }
+            
+            if (params.b !== 0) {
+                if (params.a !== 0) {
+                    expr += params.b > 0 ? ` + ${params.b}x` : ` - ${Math.abs(params.b)}x`;
+                } else {
+                    if (params.b === 1) expr += 'x';
+                    else if (params.b === -1) expr += '-x';
+                    else expr += `${params.b}x`;
+                }
+            }
+            
+            if (params.c !== 0) {
+                if (params.a !== 0 || params.b !== 0) {
+                    expr += params.c > 0 ? ` + ${params.c}` : ` - ${Math.abs(params.c)}`;
+                } else {
+                    expr += params.c;
+                }
+            }
+            
+            if (params.a === 0 && params.b === 0 && params.c === 0) {
+                expr += '0';
+            }
+            
+            document.getElementById('expression').textContent = expr;
+            
+            // 判别式
+            const delta = getDiscriminant(params.a, params.b, params.c);
+            document.getElementById('discriminant').textContent = `Δ = ${delta.toFixed(2)}`;
+            
+            // 顶点
+            const vertex = getVertex(params.a, params.b, params.c);
+            if (vertex) {
+                document.getElementById('vertexInfo').textContent = `(${vertex.x.toFixed(2)}, ${vertex.y.toFixed(2)})`;
+            } else {
+                document.getElementById('vertexInfo').textContent = '无';
+            }
+            
+            // x轴交点
+            const xInts = getXIntercepts(params.a, params.b, params.c);
+            if (xInts.length === 0) {
+                document.getElementById('xInterceptInfo').textContent = '无交点';
+            } else if (xInts.length === 1) {
+                document.getElementById('xInterceptInfo').textContent = `一个交点 (${xInts[0].x.toFixed(2)}, 0)`;
+            } else {
+                document.getElementById('xInterceptInfo').textContent = `两个交点`;
+            }
+        }
+        
+        // 绑定滑块和输入框
+        function bindParam(sliderId, inputId, paramName) {
+            const slider = document.getElementById(sliderId);
+            const input = document.getElementById(inputId);
+            
+            slider.addEventListener('input', () => {
+                params[paramName] = parseFloat(slider.value);
+                input.value = slider.value;
+                draw();
+            });
+            
+            input.addEventListener('input', () => {
+                let val = parseFloat(input.value);
+                if (isNaN(val)) val = 0;
+                val = Math.max(parseFloat(slider.min), Math.min(parseFloat(slider.max), val));
+                params[paramName] = val;
+                slider.value = val;
+                draw();
+            });
+        }
+        
+        bindParam('aSlider', 'aInput', 'a');
+        bindParam('bSlider', 'bInput', 'b');
+        bindParam('cSlider', 'cInput', 'c');
+        
+        // 切换按钮
+        function bindToggle(btnId, optionName) {
+            const btn = document.getElementById(btnId);
+            btn.addEventListener('click', () => {
+                showOptions[optionName] = !showOptions[optionName];
+                btn.classList.toggle('active', showOptions[optionName]);
+                draw();
+            });
+        }
+        
+        bindToggle('toggleVertex', 'vertex');
+        bindToggle('toggleAxis', 'axis');
+        bindToggle('toggleXIntercept', 'xIntercept');
+        bindToggle('toggleYIntercept', 'yIntercept');
+        bindToggle('toggleGrid', 'grid');
+        bindToggle('toggleRef', 'ref');
+        
+        // 保存参考图像
+        document.getElementById('saveRef').addEventListener('click', () => {
+            refParams = { ...params };
+            draw();
+        });
+        
+        // 重置参数
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            params = { a: 1, b: 0, c: 0 };
+            document.getElementById('aSlider').value = 1;
+            document.getElementById('aInput').value = 1;
+            document.getElementById('bSlider').value = 0;
+            document.getElementById('bInput').value = 0;
+            document.getElementById('cSlider').value = 0;
+            document.getElementById('cInput').value = 0;
+            draw();
+        });
+        
+        // 缩放
+        document.getElementById('zoomIn').addEventListener('click', () => {
+            coordConfig.unit = Math.min(coordConfig.unit * 1.25, 80);
+            draw();
+        });
+        
+        document.getElementById('zoomOut').addEventListener('click', () => {
+            coordConfig.unit = Math.max(coordConfig.unit / 1.25, 8);
+            draw();
+        });
+        
+        document.getElementById('zoomReset').addEventListener('click', () => {
+            coordConfig.unit = 30;
+            draw();
+        });
+        
+        // 鼠标滚轮缩放
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                coordConfig.unit = Math.min(coordConfig.unit * 1.1, 80);
+            } else {
+                coordConfig.unit = Math.max(coordConfig.unit / 1.1, 8);
+            }
+            draw();
+        });
+        
+        // 初始化
+        draw();
+    </script>
+</body>
+</html>
