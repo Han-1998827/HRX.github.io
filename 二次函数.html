@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>二次函数图像探索 · 大屏互动</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            user-select: none;
+        }
+        body {
+            background: #eef2f6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .board {
+            display: flex;
+            flex-wrap: wrap;
+            max-width: 1600px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 48px;
+            box-shadow: 0 24px 80px rgba(0, 20, 40, 0.20);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        /* ===== 左侧图形区 ===== */
+        .graph-area {
+            flex: 2;
+            min-width: 620px;
+            background: #ffffff;
+            padding: 28px 28px 24px 28px;
+            display: flex;
+            flex-direction: column;
+        }
+        .formula-header {
+            text-align: center;
+            padding: 10px 0 16px 0;
+            font-size: 1.7rem;
+            font-weight: 600;
+            color: #0f172a;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #f1f5f9;
+            margin-bottom: 16px;
+            min-height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fafcff;
+            border-radius: 20px;
+        }
+        .formula-header span {
+            background: #ffffff;
+            padding: 6px 28px;
+            border-radius: 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        .graph-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: white;
+            border-radius: 32px;
+            box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.04);
+            touch-action: none;
+            flex: 1;
+        }
+        #functionCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 32px;
+            background: white;
+            cursor: grab;
+            touch-action: none;
+        }
+
+        /* ===== 右侧控制面板 ===== */
+        .control-panel {
+            flex: 1;
+            min-width: 340px;
+            max-width: 460px;
+            background: #f8fafc;
+            padding: 28px 26px 32px 26px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            border-left: 1px solid #e9edf2;
+        }
+        .panel-title {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 4px;
+        }
+        .panel-title small {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #475569;
+            margin-left: 6px;
+        }
+
+        /* 形式切换 */
+        .form-toggle {
+            display: flex;
+            gap: 6px;
+            background: #e9edf2;
+            border-radius: 60px;
+            padding: 6px;
+        }
+        .form-toggle button {
+            flex: 1;
+            padding: 16px 6px;
+            border: none;
+            background: transparent;
+            border-radius: 40px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.25s;
+            letter-spacing: 0.3px;
+        }
+        .form-toggle button.active {
+            background: white;
+            color: #0f172a;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+        }
+        .form-toggle button:hover {
+            color: #0f172a;
+        }
+
+        /* 参数区域 */
+        .param-group {
+            background: white;
+            border-radius: 28px;
+            padding: 18px 20px 20px 20px;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+        .param-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 6px 0;
+        }
+        .param-row label {
+            width: 38px;
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1.2rem;
+            text-align: right;
+        }
+        .param-row input[type="range"] {
+            flex: 1;
+            height: 10px;
+            -webkit-appearance: none;
+            background: #dce1e9;
+            border-radius: 12px;
+            outline: none;
+            transition: background 0.2s;
+            min-width: 80px;
+        }
+        .param-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            background: #2563eb;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(37, 99, 235, 0.30);
+            border: 2px solid white;
+            transition: 0.1s;
+        }
+        .param-row input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.12);
+            background: #1d4ed8;
+        }
+        .param-row input[type="range"]::-moz-range-thumb {
+            width: 28px;
+            height: 28px;
+            background: #2563eb;
+            border-radius: 30px;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 10px rgba(37, 99, 235, 0.30);
+        }
+        .param-row .param-input {
+            width: 72px;
+            padding: 6px 4px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            text-align: center;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #0f172a;
+            background: #f8fafc;
+            transition: border 0.2s;
+            outline: none;
+            height: 42px;
+        }
+        .param-row .param-input:focus {
+            border-color: #2563eb;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+        .param-row .param-input.error {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        /* 操作按钮 */
+        .action-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .action-btn {
+            flex: 1;
+            min-width: 72px;
+            padding: 16px 8px;
+            background: white;
+            border: 1px solid #dce1e9;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #1e293b;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .action-btn.primary {
+            background: #2563eb;
+            border: 1px solid #2563eb;
+            color: white;
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+        }
+        .action-btn.primary:hover {
+            background: #1d4ed8;
+            transform: scale(1.02);
+        }
+        .action-btn:hover {
+            background: #f1f5f9;
+        }
+        .action-btn.toggle-on {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        /* 复选框 */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 22px;
+            padding: 4px 0;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            color: #1e293b;
+            cursor: pointer;
+            font-size: 1.05rem;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: #2563eb;
+            cursor: pointer;
+        }
+
+        /* 信息显示 */
+        .info-area {
+            background: white;
+            border-radius: 28px;
+            padding: 16px 20px;
+            border: 1px solid #eef2f6;
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #1e293b;
+        }
+        .info-area .highlight {
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .info-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 20px;
+            margin-top: 4px;
+        }
+        .info-grid span {
+            background: #f8fafc;
+            padding: 4px 16px;
+            border-radius: 40px;
+            font-size: 0.95rem;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px 12px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1100px) {
+            .graph-area {
+                min-width: 440px;
+                padding: 20px;
+            }
+            .control-panel {
+                min-width: 260px;
+                padding: 20px 18px 24px 18px;
+            }
+            .formula-header {
+                font-size: 1.3rem;
+                min-height: 56px;
+                padding: 6px 0 12px 0;
+            }
+            .param-row .param-input {
+                width: 60px;
+                font-size: 0.95rem;
+                height: 36px;
+            }
+            .param-row label {
+                font-size: 1rem;
+                width: 30px;
+            }
+            .action-btn {
+                font-size: 0.9rem;
+                padding: 14px 6px;
+                min-width: 60px;
+            }
+            .panel-title {
+                font-size: 1.5rem;
+            }
+        }
+        @media (max-width: 760px) {
+            .board {
+                flex-direction: column;
+                border-radius: 28px;
+            }
+            .graph-area {
+                min-width: 100%;
+                padding: 16px;
+            }
+            .control-panel {
+                border-left: none;
+                border-top: 1px solid #e9edf2;
+                min-width: 100%;
+                max-width: 100%;
+            }
+            .formula-header {
+                font-size: 1.1rem;
+                min-height: 48px;
+            }
+            .param-row .param-input {
+                width: 54px;
+                font-size: 0.9rem;
+                height: 32px;
+            }
+            .param-row input[type="range"] {
+                min-width: 50px;
+            }
+            .action-btn {
+                font-size: 0.85rem;
+                padding: 12px 4px;
+                min-width: 50px;
+            }
+            .checkbox-group label {
+                font-size: 0.95rem;
+            }
+            .info-area {
+                font-size: 0.9rem;
+                padding: 12px 16px;
+            }
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            .board {
+                border-radius: 20px;
+            }
+            .graph-area {
+                padding: 10px;
+            }
+            .control-panel {
+                padding: 14px 12px 18px 12px;
+                gap: 12px;
+            }
+            .formula-header {
+                font-size: 0.95rem;
+                padding: 4px 0 8px 0;
+                min-height: 40px;
+            }
+            .param-row {
+                gap: 4px;
+                margin: 4px 0;
+            }
+            .param-row .param-input {
+                width: 46px;
+                font-size: 0.8rem;
+                height: 28px;
+                padding: 2px 2px;
+            }
+            .param-row label {
+                font-size: 0.85rem;
+                width: 24px;
+            }
+            .param-row input[type="range"] {
+                height: 6px;
+            }
+            .param-row input[type="range"]::-webkit-slider-thumb {
+                width: 20px;
+                height: 20px;
+            }
+            .action-btn {
+                font-size: 0.75rem;
+                padding: 10px 4px;
+                min-width: 40px;
+            }
+            .panel-title {
+                font-size: 1.2rem;
+            }
+            .checkbox-group {
+                gap: 6px 14px;
+            }
+            .checkbox-group label {
+                font-size: 0.85rem;
+            }
+            .checkbox-group input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+            }
+            .info-area {
+                font-size: 0.8rem;
+                padding: 10px 12px;
+            }
+            .info-grid span {
+                font-size: 0.8rem;
+                padding: 2px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="board">
+        <!-- 左侧图形区 -->
+        <div class="graph-area">
+            <div class="formula-header" id="formulaDisplay">
+                <span>y = 1.00 x² + 0.00 x + 0.00</span>
+            </div>
+            <div class="graph-container" id="graphContainer">
+                <canvas id="functionCanvas" width="800" height="800"></canvas>
+            </div>
+        </div>
+
+        <!-- 右侧控制面板 -->
+        <div class="control-panel">
+            <div class="panel-title">
+                📐 探索 <small>二次函数</small>
+            </div>
+
+            <!-- 形式切换 -->
+            <div class="form-toggle" id="formToggle">
+                <button class="active" data-form="general">一般式</button>
+                <button data-form="vertex">顶点式</button>
+                <button data-form="intercept">交点式</button>
+            </div>
+
+            <!-- 参数滑块 + 输入框 -->
+            <div class="param-group" id="paramGroup">
+                <!-- 由 js 动态生成 -->
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="action-bar">
+                <button class="action-btn" id="resetBtn">⟳ 重置</button>
+                <button class="action-btn" id="saveRefBtn">📌 保存参考</button>
+                <button class="action-btn" id="zoomInBtn">🔍+ 放大</button>
+                <button class="action-btn" id="zoomOutBtn">🔍− 缩小</button>
+                <button class="action-btn" id="toggleAuxBtn">👁 辅助线</button>
+            </div>
+
+            <!-- 显示选项 -->
+            <div class="checkbox-group" id="toggleGroup">
+                <label><input type="checkbox" id="chkVertex" checked> 顶点</label>
+                <label><input type="checkbox" id="chkAxis" checked> 对称轴</label>
+                <label><input type="checkbox" id="chkIntercepts" checked> 交点</label>
+                <label><input type="checkbox" id="chkRef" checked> 参考图像</label>
+            </div>
+
+            <!-- 信息显示 -->
+            <div class="info-area">
+                <div class="info-row">
+                    <span class="highlight">📌 交点</span>
+                    <span id="interceptInfo">x: 无 &nbsp; y: (0.00, 0.00)</span>
+                </div>
+                <div class="info-row">
+                    <span class="highlight">🔢 判别式</span>
+                    <span id="discriminantInfo">Δ = 0.00</span>
+                </div>
+                <div class="info-grid">
+                    <span id="vertexInfo">顶点 (0.00, 0.00)</span>
+                    <span id="axisInfo">对称轴 x = 0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ===== DOM 引用 =====
+            const canvas = document.getElementById('functionCanvas');
+            const ctx = canvas.getContext('2d');
+            const container = document.getElementById('graphContainer');
+            const paramGroup = document.getElementById('paramGroup');
+            const formulaDisplay = document.getElementById('formulaDisplay');
+            const interceptInfo = document.getElementById('interceptInfo');
+            const discriminantInfo = document.getElementById('discriminantInfo');
+            const vertexInfo = document.getElementById('vertexInfo');
+            const axisInfo = document.getElementById('axisInfo');
+
+            // ===== 状态 =====
+            let range = 20; // 默认 ±20
+            const MIN_RANGE = 2;
+            const MAX_RANGE = 40;
+
+            let params = { a: 1, b: 0, c: 0, h: 0, k: 0, x1: -2, x2: 2 };
+            let currentForm = 'general'; // 'general' | 'vertex' | 'intercept'
+
+            let refParams = null; // { a, b, c } 或 null
+
+            let showVertex = true;
+            let showAxis = true;
+            let showIntercepts = true;
+            let showReference = true;
+            let showAuxAll = true; // 辅助线总开关
+
+            // 防止循环更新
+            let updating = false;
+
+            // ===== 辅助函数 =====
+            function getABC() {
+                let a = params.a,
+                    b = 0,
+                    c = 0;
+                if (currentForm === 'general') {
+                    b = params.b;
+                    c = params.c;
+                } else if (currentForm === 'vertex') {
+                    const h = params.h,
+                        k = params.k;
+                    b = -2 * a * h;
+                    c = a * h * h + k;
+                } else if (currentForm === 'intercept') {
+                    const x1 = params.x1,
+                        x2 = params.x2;
+                    b = -a * (x1 + x2);
+                    c = a * x1 * x2;
+                }
+                return { a, b, c };
+            }
+
+            function calcFeatures() {
+                const { a, b, c } = getABC();
+                const disc = b * b - 4 * a * c;
+                let vertexX = NaN,
+                    vertexY = NaN;
+                if (Math.abs(a) > 1e-12) {
+                    vertexX = -b / (2 * a);
+                    vertexY = a * vertexX * vertexX + b * vertexX + c;
+                }
+                let xIntercepts = [];
+                if (Math.abs(a) > 1e-12) {
+                    if (disc > 1e-12) {
+                        const sqrtD = Math.sqrt(disc);
+                        xIntercepts.push((-b - sqrtD) / (2 * a));
+                        xIntercepts.push((-b + sqrtD) / (2 * a));
+                    } else if (Math.abs(disc) <= 1e-12) {
+                        xIntercepts.push(-b / (2 * a));
+                    }
+                } else {
+                    // a=0 时一次函数，求根
+                    if (Math.abs(b) > 1e-12) {
+                        xIntercepts.push(-c / b);
+                    }
+                }
+                const yIntercept = c;
+                return { disc, vertexX, vertexY, xIntercepts, yIntercept, a, b, c };
+            }
+
+            function generateFormula() {
+                const { a, b, c } = getABC();
+                const fmt = (v) => (v >= 0 ? '+' : '') + v.toFixed(2);
+                if (currentForm === 'general') {
+                    return `y = ${a.toFixed(2)} x² ${fmt(b)} x ${fmt(c)}`;
+                } else if (currentForm === 'vertex') {
+                    const h = params.h,
+                        k = params.k;
+                    const hStr = (h >= 0 ? `- ${h.toFixed(2)}` : `+ ${(-h).toFixed(2)}`);
+                    return `y = ${a.toFixed(2)} (x ${hStr})² ${k >= 0 ? '+' : '-'} ${Math.abs(k).toFixed(2)}`;
+                } else if (currentForm === 'intercept') {
+                    const x1 = params.x1,
+                        x2 = params.x2;
+                    const s1 = (x1 >= 0 ? `- ${x1.toFixed(2)}` : `+ ${(-x1).toFixed(2)}`);
+                    const s2 = (x2 >= 0 ? `- ${x2.toFixed(2)}` : `+ ${(-x2).toFixed(2)}`);
+                    return `y = ${a.toFixed(2)} (x ${s1})(x ${s2})`;
+                }
+                return '';
+            }
+
+            // ===== 绘制核心 =====
+            function draw() {
+                const w = canvas.width,
+                    h = canvas.height;
+                ctx.clearRect(0, 0, w, h);
+
+                const scale = w / (2 * range);
+                const cx = w / 2,
+                    cy = h / 2;
+
+                // ---- 网格 ----
+                ctx.save();
+                const stepMajor = 5;
+                const stepMinor = 1;
+                // 细网格
+                ctx.strokeStyle = "#e8ecf0";
+                ctx.lineWidth = 0.6;
+                for (let v = -range; v <= range; v += stepMinor) {
+                    if (Math.abs(v) < 0.001) continue;
+                    if (Math.abs(v % stepMajor) < 0.001) continue;
+                    const px = cx + v * scale;
+                    ctx.beginPath();
+                    ctx.moveTo(px, 0);
+                    ctx.lineTo(px, h);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, cy - v * scale);
+                    ctx.lineTo(w, cy - v * scale);
+                    ctx.stroke();
+                }
+                // 主网格
+                ctx.strokeStyle = "#cbd5e1";
+                ctx.lineWidth = 1.2;
+                for (let v = -range; v <= range; v += stepMajor) {
+                    if (Math.abs(v) < 0.001) continue;
+                    const px = cx + v * scale;
+                    ctx.beginPath();
+                    ctx.moveTo(px, 0);
+                    ctx.lineTo(px, h);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, cy - v * scale);
+                    ctx.lineTo(w, cy - v * scale);
+                    ctx.stroke();
+                }
+                // 坐标轴
+                ctx.strokeStyle = "#1e293b";
+                ctx.lineWidth = 2.2;
+                ctx.beginPath();
+                ctx.moveTo(0, cy);
+                ctx.lineTo(w, cy);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(cx, 0);
+                ctx.lineTo(cx, h);
+                ctx.stroke();
+                // 箭头
+                ctx.fillStyle = "#1e293b";
+                ctx.beginPath();
+                ctx.moveTo(w - 6, cy - 6);
+                ctx.lineTo(w, cy);
+                ctx.lineTo(w - 6, cy + 6);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(cx - 6, 6);
+                ctx.lineTo(cx, 0);
+                ctx.lineTo(cx + 6, 6);
+                ctx.fill();
+                // 刻度标签
+                ctx.fillStyle = "#1e293b";
+                ctx.font = "15px 'Segoe UI', system-ui";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "top";
+                const labelStep = (range <= 10) ? 2 : 5;
+                for (let v = -range; v <= range; v += labelStep) {
+                    if (Math.abs(v) < 0.001) continue;
+                    const px = cx + v * scale;
+                    if (px > 10 && px < w - 10) {
+                        ctx.fillText(v, px, cy + 6);
+                    }
+                }
+                ctx.textAlign = "right";
+                ctx.textBaseline = "middle";
+                for (let v = -range; v <= range; v += labelStep) {
+                    if (Math.abs(v) < 0.001) continue;
+                    const py = cy - v * scale;
+                    if (py > 10 && py < h - 10) {
+                        ctx.fillText(v, cx - 8, py);
+                    }
+                }
+                ctx.textAlign = "left";
+                ctx.textBaseline = "bottom";
+                ctx.font = "16px 'Segoe UI', system-ui";
+                ctx.fillText("x", w - 18, cy - 10);
+                ctx.fillText("y", cx + 10, 18);
+                ctx.restore();
+
+                // ---- 获取函数 ----
+                const { a, b, c } = getABC();
+
+                // ---- 参考图像 (灰色虚线) ----
+                if (showReference && refParams) {
+                    ctx.save();
+                    ctx.strokeStyle = "#94a3b8";
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([8, 8]);
+                    ctx.beginPath();
+                    const refA = refParams.a,
+                        refB = refParams.b,
+                        refC = refParams.c;
+                    let first = true;
+                    for (let px = 0; px < w; px += 0.5) {
+                        const x = (px - cx) / scale;
+                        const y = refA * x * x + refB * x + refC;
+                        const py = cy - y * scale;
+                        if (py < -100 || py > h + 100) { first = true; continue; }
+                        if (first) { ctx.moveTo(px, py);
+                            first = false; } else ctx.lineTo(px, py);
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // ---- 当前函数 (橙色粗线) ----
+                ctx.save();
+                ctx.strokeStyle = "#f97316";
+                ctx.lineWidth = 5;
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                let first2 = true;
+                for (let px = 0; px < w; px += 0.5) {
+                    const x = (px - cx) / scale;
+                    const y = a * x * x + b * x + c;
+                    const py = cy - y * scale;
+                    if (py < -100 || py > h + 100) { first2 = true; continue; }
+                    if (first2) { ctx.moveTo(px, py);
+                        first2 = false; } else ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+                ctx.restore();
+
+                // ---- 特征计算 ----
+                const feat = calcFeatures();
+                const { disc, vertexX, vertexY, xIntercepts, yIntercept } = feat;
+                const isQuadratic = Math.abs(a) > 1e-12;
+                const showAux = showAuxAll;
+
+                // ---- 对称轴 ----
+                if (showAux && showAxis && isQuadratic && isFinite(vertexX)) {
+                    ctx.save();
+                    ctx.strokeStyle = "#3b82f6";
+                    ctx.lineWidth = 2.5;
+                    ctx.setLineDash([6, 6]);
+                    const px = cx + vertexX * scale;
+                    ctx.beginPath();
+                    ctx.moveTo(px, 0);
+                    ctx.lineTo(px, h);
+                    ctx.stroke();
+                    ctx.restore();
+                    axisInfo.textContent = `对称轴 x = ${vertexX.toFixed(2)}`;
+                } else {
+                    axisInfo.textContent = `对称轴 —`;
+                }
+
+                // ---- 顶点 ----
+                if (showAux && showVertex && isQuadratic && isFinite(vertexX) && isFinite(vertexY)) {
+                    ctx.save();
+                    ctx.shadowColor = "#8b5cf680";
+                    ctx.shadowBlur = 14;
+                    const px = cx + vertexX * scale;
+                    const py = cy - vertexY * scale;
+                    // 发光圈
+                    ctx.fillStyle = "#8b5cf6";
+                    ctx.beginPath();
+                    ctx.arc(px, py, 12, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = "#1e293b";
+                    ctx.font = "15px 'Segoe UI', system-ui";
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "bottom";
+                    ctx.fillText(`(${vertexX.toFixed(2)}, ${vertexY.toFixed(2)})`, px + 16, py - 4);
+                    ctx.restore();
+                    vertexInfo.textContent = `顶点 (${vertexX.toFixed(2)}, ${vertexY.toFixed(2)})`;
+                } else {
+                    vertexInfo.textContent = `顶点 —`;
+                }
+
+                // ---- 交点 ----
+                if (showAux && showIntercepts) {
+                    ctx.save();
+                    // x轴交点 (红色)
+                    xIntercepts.forEach(xv => {
+                        if (Math.abs(xv) > range * 1.8) return;
+                        const px = cx + xv * scale;
+                        const py = cy;
+                        ctx.shadowColor = "#ef444480";
+                        ctx.shadowBlur = 12;
+                        ctx.fillStyle = "#ef4444";
+                        ctx.beginPath();
+                        ctx.arc(px, py, 10, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = "#1e293b";
+                        ctx.font = "14px 'Segoe UI', system-ui";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "top";
+                        ctx.fillText(`(${xv.toFixed(2)}, 0)`, px, py + 14);
+                    });
+                    // y轴交点 (蓝色)
+                    if (Math.abs(yIntercept) <= range * 1.8) {
+                        const px = cx;
+                        const py = cy - yIntercept * scale;
+                        ctx.shadowColor = "#3b82f680";
+                        ctx.shadowBlur = 12;
+                        ctx.fillStyle = "#3b82f6";
+                        ctx.beginPath();
+                        ctx.arc(px, py, 10, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = "#1e293b";
+                        ctx.font = "14px 'Segoe UI', system-ui";
+                        ctx.textAlign = "left";
+                        ctx.textBaseline = "bottom";
+                        ctx.fillText(`(0, ${yIntercept.toFixed(2)})`, px + 14, py - 4);
+                    }
+                    ctx.restore();
+                    let xStr = xIntercepts.length ? xIntercepts.map(v => v.toFixed(2)).join(', ') : '无';
+                    interceptInfo.textContent = `x: ${xStr}  y: (0, ${yIntercept.toFixed(2)})`;
+                } else {
+                    interceptInfo.textContent = `x: 隐藏  y: 隐藏`;
+                }
+
+                // ---- 判别式 ----
+                discriminantInfo.textContent = `Δ = ${disc.toFixed(2)}`;
+
+                // ---- 公式 ----
+                formulaDisplay.innerHTML = `<span>${generateFormula()}</span>`;
+            }
+
+            // ===== 滑块 + 输入框生成 =====
+            function buildSliders() {
+                let configs = [];
+                if (currentForm === 'general') {
+                    configs = [
+                        { key: 'a', label: 'a', min: -10, max: 10, step: 0.1, default: 1 },
+                        { key: 'b', label: 'b', min: -20, max: 20, step: 0.1, default: 0 },
+                        { key: 'c', label: 'c', min: -20, max: 20, step: 0.1, default: 0 }
+                    ];
+                } else if (currentForm === 'vertex') {
+                    configs = [
+                        { key: 'a', label: 'a', min: -10, max: 10, step: 0.1, default: 1 },
+                        { key: 'h', label: 'h', min: -20, max: 20, step: 0.1, default: 0 },
+                        { key: 'k', label: 'k', min: -20, max: 20, step: 0.1, default: 0 }
+                    ];
+                } else if (currentForm === 'intercept') {
+                    configs = [
+                        { key: 'a', label: 'a', min: -10, max: 10, step: 0.1, default: 1 },
+                        { key: 'x1', label: 'x₁', min: -20, max: 20, step: 0.1, default: -2 },
+                        { key: 'x2', label: 'x₂', min: -20, max: 20, step: 0.1, default: 2 }
+                    ];
+                }
+
+                paramGroup.innerHTML = '';
+                configs.forEach(cfg => {
+                    const row = document.createElement('div');
+                    row.className = 'param-row';
+
+                    const label = document.createElement('label');
+                    label.textContent = cfg.label;
+
+                    const inputRange = document.createElement('input');
+                    inputRange.type = 'range';
+                    inputRange.min = cfg.min;
+                    inputRange.max = cfg.max;
+                    inputRange.step = cfg.step;
+                    const val = (params[cfg.key] !== undefined && params[cfg.key] !== null) ? params[cfg.key] : cfg
+                    .default;
+                    inputRange.value = val;
+
+                    const inputNum = document.createElement('input');
+                    inputNum.type = 'text';
+                    inputNum.className = 'param-input';
+                    inputNum.value = parseFloat(val).toFixed(2);
+
+                    // 同步 滑块 -> 输入框
+                    inputRange.addEventListener('input', function() {
+                        if (updating) return;
+                        const v = parseFloat(this.value);
+                        params[cfg.key] = v;
+                        inputNum.value = v.toFixed(2);
+                        inputNum.classList.remove('error');
+                        draw();
+                    });
+
+                    // 同步 输入框 -> 滑块
+                    inputNum.addEventListener('input', function() {
+                        if (updating) return;
+                        const raw = this.value.trim();
+                        if (raw === '') return;
+                        const v = parseFloat(raw);
+                        if (isNaN(v)) {
+                            this.classList.add('error');
+                            return;
+                        }
+                        this.classList.remove('error');
+                        const clamped = Math.min(Math.max(v, cfg.min), cfg.max);
+                        params[cfg.key] = clamped;
+                        inputRange.value = clamped;
+                        this.value = clamped.toFixed(2);
+                        draw();
+                    });
+
+                    inputNum.addEventListener('blur', function() {
+                        const raw = this.value.trim();
+                        if (raw === '') {
+                            const def = cfg.default;
+                            this.value = def.toFixed(2);
+                            params[cfg.key] = def;
+                            inputRange.value = def;
+                            draw();
+                            return;
+                        }
+                        const v = parseFloat(raw);
+                        if (isNaN(v)) {
+                            const def = cfg.default;
+                            this.value = def.toFixed(2);
+                            params[cfg.key] = def;
+                            inputRange.value = def;
+                            draw();
+                            return;
+                        }
+                        const clamped = Math.min(Math.max(v, cfg.min), cfg.max);
+                        params[cfg.key] = clamped;
+                        inputRange.value = clamped;
+                        this.value = clamped.toFixed(2);
+                        this.classList.remove('error');
+                        draw();
+                    });
+
+                    // 回车确认
+                    inputNum.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter') {
+                            this.blur();
+                        }
+                    });
+
+                    row.appendChild(label);
+                    row.appendChild(inputRange);
+                    row.appendChild(inputNum);
+                    paramGroup.appendChild(row);
+
+                    // 确保 params 有值
+                    if (params[cfg.key] === undefined || params[cfg.key] === null) {
+                        params[cfg.key] = cfg.default;
+                    }
+                });
+
+                draw();
+            }
+
+            // ===== 重置 =====
+            function resetAll() {
+                if (currentForm === 'general') { params.a = 1;
+                    params.b = 0;
+                    params.c = 0; } else if (currentForm === 'vertex') { params.a = 1;
+                    params.h = 0;
+                    params.k = 0; } else if (currentForm === 'intercept') { params.a = 1;
+                    params.x1 = -2;
+                    params.x2 = 2; }
+                range = 20;
+                refParams = null;
+                // 重置复选框
+                document.getElementById('chkVertex').checked = true;
+                document.getElementById('chkAxis').checked = true;
+                document.getElementById('chkIntercepts').checked = true;
+                document.getElementById('chkRef').checked = true;
+                showVertex = true;
+                showAxis = true;
+                showIntercepts = true;
+                showReference = true;
+                showAuxAll = true;
+                document.getElementById('toggleAuxBtn').textContent = '👁 辅助线';
+                document.getElementById('toggleAuxBtn').classList.remove('toggle-on');
+                buildSliders();
+                draw();
+            }
+
+            // ===== 保存参考 =====
+            function saveReference() {
+                const { a, b, c } = getABC();
+                refParams = { a, b, c };
+                draw();
+            }
+
+            // ===== 放大 / 缩小 =====
+            function zoomIn() {
+                if (range > MIN_RANGE) {
+                    range = Math.max(MIN_RANGE, range - 2);
+                    draw();
+                }
+            }
+
+            function zoomOut() {
+                if (range < MAX_RANGE) {
+                    range = Math.min(MAX_RANGE, range + 2);
+                    draw();
+                }
+            }
+
+            // ===== 切换辅助线总开关 =====
+            function toggleAux() {
+                showAuxAll = !showAuxAll;
+                const btn = document.getElementById('toggleAuxBtn');
+                if (showAuxAll) {
+                    btn.textContent = '👁 辅助线';
+                    btn.classList.remove('toggle-on');
+                } else {
+                    btn.textContent = '🚫 辅助线';
+                    btn.classList.add('toggle-on');
+                }
+                draw();
+            }
+
+            // ===== 切换函数形式 =====
+            function setForm(form) {
+                currentForm = form;
+                if (form === 'general') { params.a = 1;
+                    params.b = 0;
+                    params.c = 0; } else if (form === 'vertex') { params.a = 1;
+                    params.h = 0;
+                    params.k = 0; } else if (form === 'intercept') { params.a = 1;
+                    params.x1 = -2;
+                    params.x2 = 2; }
+                document.querySelectorAll('#formToggle button').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.form === form);
+                });
+                buildSliders();
+                draw();
+            }
+
+            // ===== 初始化UI事件 =====
+            function initUI() {
+                // 形式切换
+                document.querySelectorAll('#formToggle button').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        setForm(this.dataset.form);
+                    });
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', resetAll);
+                document.getElementById('saveRefBtn').addEventListener('click', saveReference);
+                document.getElementById('zoomInBtn').addEventListener('click', zoomIn);
+                document.getElementById('zoomOutBtn').addEventListener('click', zoomOut);
+                document.getElementById('toggleAuxBtn').addEventListener('click', toggleAux);
+
+                // 复选框
+                document.getElementById('chkVertex').addEventListener('change', e => {
+                    showVertex = e.target.checked;
+                    draw();
+                });
+                document.getElementById('chkAxis').addEventListener('change', e => {
+                    showAxis = e.target.checked;
+                    draw();
+                });
+                document.getElementById('chkIntercepts').addEventListener('change', e => {
+                    showIntercepts = e.target.checked;
+                    draw();
+                });
+                document.getElementById('chkRef').addEventListener('change', e => {
+                    showReference = e.target.checked;
+                    draw();
+                });
+
+                // 窗口变化重绘
+                let resizeTimer;
+                window.addEventListener('resize', function() {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(draw, 150);
+                });
+            }
+
+            // ===== 启动 =====
+            setForm('general');
+            initUI();
+            // 保存初始参考
+            setTimeout(() => {
+                const { a, b, c } = getABC();
+                refParams = { a, b, c };
+                draw();
+            }, 120);
+        })();
+    </script>
+</body>
+</html>
